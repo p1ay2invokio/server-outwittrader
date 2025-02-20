@@ -1,0 +1,36 @@
+services:
+  sql-server:
+    container_name: sqlserver
+    hostname: sqlserver
+    image: d5a36d70dbe0
+    ports:
+      - 1433:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=yourStrong(!)Password
+    networks:
+      - sql_network
+  app:
+    container_name: app
+    image: .
+    ports:
+      - 3001:3001
+    networks:
+      - sql_network
+    depends_on:
+      - sql-server
+  web:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - sql_network
+    depends_on:
+      - app
+
+networks:
+  sql_network:
+    driver: bridge
