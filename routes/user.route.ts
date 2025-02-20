@@ -38,15 +38,16 @@ route.post("/login", async (req: Request, res: Response) => {
 route.post("/register", async (req: Request, res: Response) => {
     let { username, password, email, phone_number } = req.body
 
+    console.log(username, password, email, phone_number)
+
     if (username && password) {
         const user: [] = await AppDataSource.createQueryBuilder().select().from(UserEntity, 'user').where("user.username = :username", { username: username }).execute()
-
-        console.log(user)
 
         if (user && user.length > 0) {
             res.status(409).send({ already_username: true })
         } else {
             const inserted = await AppDataSource.createQueryBuilder().insert().into(UserEntity).values({ username: username, password: password, email: email, phone_number: phone_number }).execute()
+            console.log(inserted)
 
             const token = await jwt.sign({ id: inserted.raw[0].id, username: username }, 'play2')
 

@@ -8,7 +8,7 @@ const route = express.Router()
 
 route.get("/products", TokenMiddleware, async (req: Request, res: Response) => {
 
-    const products = await AppDataSource.createQueryBuilder().select().from(ProductEntity, 'product').execute()
+    const products = await AppDataSource.createQueryBuilder().select().from(ProductEntity, 'product').orderBy("product.id", "ASC").execute()
 
     // console.log(products)
 

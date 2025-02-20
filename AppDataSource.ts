@@ -1,18 +1,14 @@
 import { DataSource } from "typeorm";
 
 export const AppDataSource = new DataSource({
-    type: 'mssql',
-    host: 'localhost',
+    type: 'postgres',
+    host: 'db',
     database: 'outwittrader',
-    port: 50766,
-    username: 'sa',
-    password: 'yourStrong(!)Password',
+    port: 5432,
+    username: 'postgres',
+    password: '123456',
     synchronize: false,
-    entities: ['./entities/*.entity.ts'],
-    options:{
-        trustServerCertificate: true
-    }
-
+    entities: ['./entities/*.entity.ts']
 })
 
 AppDataSource.initialize().then(() => {

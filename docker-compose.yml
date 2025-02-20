@@ -1,36 +1,45 @@
 services:
-  sql-server:
-    container_name: sqlserver
-    hostname: sqlserver
-    image: d5a36d70dbe0
-    ports:
-      - 1433:1433
+  db:
+    container_name: db
+    image: postgres
+    restart: always
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=yourStrong(!)Password
+      POSTGRES_USER: play2
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: outwittrader
+    ports:
+      - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
     networks:
-      - sql_network
+      - network
   app:
     container_name: app
-    image: .
+    build: .
     ports:
       - 3001:3001
-    networks:
-      - sql_network
     depends_on:
-      - sql-server
+      - db
+    networks:
+      - network
   web:
     image: nginx
+    container_name: web
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./cert/cert.pem:/etc/nginx/cert.pem
+      - ./cert/privkey.pem:/etc/nginx/privkey.pem
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443
     networks:
-      - sql_network
+      - network
     depends_on:
       - app
 
+volumes:
+  db-data:
+
 networks:
-  sql_network:
+  network:
     driver: bridge
