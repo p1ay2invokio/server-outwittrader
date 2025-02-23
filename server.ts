@@ -9,11 +9,44 @@ import crypto from 'crypto'
 import axios from 'axios'
 // import xml from 'xml2js'
 import nodemailer from 'nodemailer'
+import dayjs from 'dayjs'
+import { AppDataSource } from './AppDataSource'
+import { UserEntity } from './entities/user.entity'
+import { Raw } from 'typeorm';
 
 const app = express()
 app.use(express.json())
 app.use(cors())
 
+
+const updateTotalDays = async () => {
+    console.log("It's midnight! Updating total_days...");
+
+    await AppDataSource.createQueryBuilder()
+        .update(UserEntity)
+        .set({ total_days: Raw((alias) => `${alias}.total_days - 1`) })
+        .where("total_days > 0")
+        .execute();
+
+    console.log("Update complete! Scheduling next run...");
+    scheduleMidnightTask(); // Schedule the next midnight update
+};
+
+const scheduleMidnightTask = () => {
+    const now = dayjs();
+    const nextMidnight = now.add(1, 'day').startOf('day');
+    const timeUntilMidnight = 0
+
+    console.log(`Next update scheduled in ${timeUntilMidnight / 1000} seconds`);
+
+    setTimeout(updateTotalDays, timeUntilMidnight);
+};
+
+scheduleMidnightTask();
+
+app.get('/api/test', async (req, res) => {
+    res.status(200).send({ status: true })
+});
 
 const BBB_URL = 'https://streaming.playapi.shop/bigbluebutton';
 const BBB_SECRET = 'Fb1hVHe2nk8KIXS5wMNyUUqHrq8WOdUUUYehAZySGU'
@@ -66,6 +99,6 @@ app.post('/api/meetings/users', async (req, res) => {
 app.use('/slip', express.static('uploads'))
 app.use('/api', UserRoute, ProductRoute, OrderRoute, MailRoute)
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`server is running on port ${PORT}`)
 })

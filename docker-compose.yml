@@ -12,7 +12,20 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     networks:
-      - network
+      - two-network
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user@domain.com
+      PGADMIN_DEFAULT_PASSWORD: 123456
+      PGADMIN_LISTEN_PORT: 89
+    ports:
+      - 89:89
+    depends_on:
+      - db
+    networks:
+      - two-network
   app:
     container_name: app
     build: .
@@ -21,7 +34,7 @@ services:
     depends_on:
       - db
     networks:
-      - network
+      - two-network
   web:
     image: nginx
     container_name: web
@@ -33,13 +46,14 @@ services:
       - 80:80
       - 443:443
     networks:
-      - network
+      - two-network
     depends_on:
       - app
 
 volumes:
   db-data:
 
+
 networks:
-  network:
+  two-network:
     driver: bridge
