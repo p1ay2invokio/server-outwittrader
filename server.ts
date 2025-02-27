@@ -18,24 +18,24 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
+// Update Every user days -1 on 00.00
 
 const updateTotalDays = async () => {
     console.log("It's midnight! Updating total_days...");
 
     await AppDataSource.createQueryBuilder()
         .update(UserEntity)
-        .set({ total_days: Raw((alias) => `${alias}.total_days - 1`) })
+        .set({ total_days: () => "total_days - 1" })
         .where("total_days > 0")
         .execute();
 
-    console.log("Update complete! Scheduling next run...");
-    scheduleMidnightTask(); // Schedule the next midnight update
+    scheduleMidnightTask();
 };
 
 const scheduleMidnightTask = () => {
     const now = dayjs();
     const nextMidnight = now.add(1, 'day').startOf('day');
-    const timeUntilMidnight = 0
+    const timeUntilMidnight = nextMidnight.diff(now)
 
     console.log(`Next update scheduled in ${timeUntilMidnight / 1000} seconds`);
 
@@ -48,8 +48,17 @@ app.get('/api/test', async (req, res) => {
     res.status(200).send({ status: true })
 });
 
-const BBB_URL = 'https://streaming.playapi.shop/bigbluebutton';
-const BBB_SECRET = 'Fb1hVHe2nk8KIXS5wMNyUUqHrq8WOdUUUYehAZySGU'
+app.get('/api/row', async (req, res) => {
+    await AppDataSource.createQueryBuilder()
+        .update(UserEntity)
+        .set({ total_days: () => "total_days - 1" })
+        .where("total_days > 0")
+        .execute();
+    res.status(200).send({ status: true })
+});
+
+const BBB_URL = 'https://bbb.outwittrader.com/bigbluebutton';
+const BBB_SECRET = 'gWaTMghSRfH5ejCCOg0NFDCp7SKVqq9Sz2e0GXcGsw'
 
 function generateChecksum(apiCall: string, query: string) {
     return crypto.createHash('sha1').update(apiCall + query + BBB_SECRET).digest('hex');
@@ -57,7 +66,7 @@ function generateChecksum(apiCall: string, query: string) {
 
 app.get('/api/meetings/create', async (req, res) => {
     // const meetingID = 'meeting-' + Date.now();
-    const meetingID = 'meeting-' + 'outwit-room2'
+    const meetingID = 'meeting-' + 'outwit-room'
     const query = `meetingID=${meetingID}&name=${meetingID}&welcome=Welcome&bannerText=OutwitStreaming&endWhenNoModerator=false&endWhenNoModeratorDelayInMinutes=999999&duration=999999&allowRequestsWithoutSession=true&muteOnStart=true&lockSettingsDisableCam=true&lockSettingsDisableMic=true`;
     const checksum = generateChecksum('create', query);
     const url = `${BBB_URL}/api/create?${query}&checksum=${checksum}`;

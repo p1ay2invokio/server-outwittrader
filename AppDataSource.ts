@@ -1,11 +1,12 @@
 import { DataSource } from "typeorm";
+import { state } from "./config";
 
 export const AppDataSource = new DataSource({
     type: 'postgres',
-    host: 'db',
+    host: state == 'dev' ? 'localhost' : 'db',
     database: 'outwittrader',
     port: 5432,
-    username: 'postgres',
+    username: state == 'dev' ? 'postgres' : 'play2',
     password: '123456',
     synchronize: false,
     entities: ['./entities/*.entity.ts']
