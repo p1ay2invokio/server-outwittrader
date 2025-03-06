@@ -5,14 +5,31 @@ import UserRoute from './routes/user.route'
 import ProductRoute from './routes/product.route'
 import OrderRoute from './routes/order.route'
 import MailRoute from './routes/mail.route'
+import ForexRouter from './routes/forex.route'
 import crypto from 'crypto'
 import axios from 'axios'
 // import xml from 'xml2js'
-import nodemailer from 'nodemailer'
 import dayjs from 'dayjs'
 import { AppDataSource } from './AppDataSource'
 import { UserEntity } from './entities/user.entity'
-import { Raw } from 'typeorm';
+import ioredis from 'ioredis'
+
+export const redis = new ioredis({
+    host: 'localhost',
+    port: 6379
+})
+
+redis.set('key', 'Hello Redis', (err, reply) => {
+    if (err) throw err
+
+    console.log(reply)
+
+    redis.get('key', (err, value) => {
+        if (err) throw err
+
+        console.log("Get : ", value)
+    })
+})
 
 const app = express()
 app.use(express.json())
@@ -57,17 +74,20 @@ app.get('/api/row', async (req, res) => {
     res.status(200).send({ status: true })
 });
 
-const BBB_URL = 'https://bbb.outwittrader.com/bigbluebutton';
+const BBB_URL = 'https://livestream.outwittrader.com/bigbluebutton';
 const BBB_SECRET = 'gWaTMghSRfH5ejCCOg0NFDCp7SKVqq9Sz2e0GXcGsw'
 
 function generateChecksum(apiCall: string, query: string) {
     return crypto.createHash('sha1').update(apiCall + query + BBB_SECRET).digest('hex');
 }
 
-app.get('/api/meetings/create', async (req, res) => {
-    // const meetingID = 'meeting-' + Date.now();
-    const meetingID = 'meeting-' + 'outwit-room'
-    const query = `meetingID=${meetingID}&name=${meetingID}&welcome=Welcome&bannerText=OutwitStreaming&endWhenNoModerator=false&endWhenNoModeratorDelayInMinutes=999999&duration=999999&allowRequestsWithoutSession=true&muteOnStart=true&lockSettingsDisableCam=true&lockSettingsDisableMic=true`;
+app.post('/api/meetings/create', async (req, res) => {
+    let { room_name } = req.body
+
+    console.log(room_name)
+
+    const meetingID = room_name
+    const query = `meetingID=${meetingID}&name=${meetingID}&welcome=Welcome&bannerText=OutwitStreaming&endWhenNoModerator=false&endWhenNoModeratorDelayInMinutes=999999&duration=999999&allowRequestsWithoutSession=true&muteOnStart=true&lockSettingsDisableCam=true&lockSettingsDisableMic=true&lockSettingsDisablePublicChat=true&meetingLayout=FOCUS_ON_PRESENTATION`;
     const checksum = generateChecksum('create', query);
     const url = `${BBB_URL}/api/create?${query}&checksum=${checksum}`;
     const response = await axios.get<string>(url);
@@ -106,7 +126,7 @@ app.post('/api/meetings/users', async (req, res) => {
 
 
 app.use('/slip', express.static('uploads'))
-app.use('/api', UserRoute, ProductRoute, OrderRoute, MailRoute)
+app.use('/api', UserRoute, ProductRoute, OrderRoute, MailRoute, ForexRouter)
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`server is running on port ${PORT}`)

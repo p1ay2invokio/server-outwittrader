@@ -7,6 +7,8 @@ import { ProductEntity } from '../entities/products.entity'
 import multer from 'multer'
 import fs from 'fs'
 import path from 'path'
+import { WEBHOOK_DISCORD } from '../config'
+import axios from 'axios'
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -81,6 +83,7 @@ route.post("/purchase", TokenMiddleware, upload.single('slip'), async (req: Toke
     console.log(product_id)
     console.log(slip)
     let timestamp = new Date().getTime()
+    let day = new Date()
 
     const product: ProductEntity[] = await AppDataSource.createQueryBuilder().select().from(ProductEntity, 'product').where({ id: product_id }).execute()
 
@@ -92,12 +95,14 @@ route.post("/purchase", TokenMiddleware, upload.single('slip'), async (req: Toke
         // console.log(total_amount)
 
         const inserted = await AppDataSource.createQueryBuilder().insert().into(OrderEntity).values({ user_id: user_id, product_id: product_id, timestamp: String(timestamp), slip: slip?.filename }).execute()
-        // const update_user = await AppDataSource.createQueryBuilder().update(UserEntity).set({ total_days: total_amount }).where({id: user_id}).execute()
-
-        // console.log(update_user)
 
         if (inserted.raw) {
-            res.status(200).send({ purchased: true })
+
+            axios.post(WEBHOOK_DISCORD, {
+                content: `\`\`\`🟢 ${user[0].username} สั่งซื้อสินค้าแพ็คเก็จ ${product[0].name} ${product[0].price} บาท ${day}\`\`\``
+            }).then(() => {
+                res.status(200).send({ purchased: true })
+            })
         } else {
             res.status(400).send("Invalid request payload")
         }
@@ -122,10 +127,9 @@ route.patch("/confirm_slip", TokenMiddleware, async (req: Request, res: Response
 
             let result_days = user[0].total_days + product[0].days
 
-            // console.log("UPdate : ", update_order)
-
-            const update_order = await AppDataSource.createQueryBuilder().update(OrderEntity).set({ status: 1 }).where({ id: order_id }).execute()
-            const update_user = await AppDataSource.createQueryBuilder().update(UserEntity).set({ total_days: result_days }).where({ id: order[0].user_id }).execute()
+            await AppDataSource.createQueryBuilder().update(OrderEntity).set({ status: 1 }).where({ id: order_id }).execute()
+            
+            await AppDataSource.createQueryBuilder().update(UserEntity).set({ total_days: result_days }).where({ id: order[0].user_id }).execute()
 
             res.status(200).send("Confirmed Slip")
 
