@@ -31,9 +31,12 @@ router.get("/updateForex", async (req, res) => {
     if (data && data.length > 0) {
         try {
             let forexNews = await axios.get("https://nfs.faireconomy.media/ff_calendar_thisweek.json")
-            await AppDataSource.createQueryBuilder().update(ForexEntity).set({ news: JSON.stringify(forexNews) }).where({ id: 1 }).execute()
+            let cvt_forex = JSON.stringify(forexNews.data)
+            await AppDataSource.createQueryBuilder().update(ForexEntity).set({ news: cvt_forex }).where({ id: 1 }).execute()
+            redis.del("forex")
             res.status(200).send({ updateForexNews: true })
-        }catch(err){
+        } catch (err) {
+            console.log(err)
             console.log("Wait 5 minutes for fetch new data")
         }
     } else {

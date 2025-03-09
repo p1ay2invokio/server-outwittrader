@@ -11,6 +11,7 @@ services:
       - 5432:5432
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d # This init-db will run once until it has been deleted
     networks:
       - two-network
   pgadmin:
@@ -49,6 +50,13 @@ services:
       - two-network
     depends_on:
       - app
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - two-network
 
 volumes:
   db-data:
