@@ -10,6 +10,8 @@ export const TokenMiddleware = (req: TokenInterface, res: Response, next: NextFu
 
     let token = req.headers.authorization?.split(' ')[1]
 
+    console.log("TOKEN :", token)
+
     if (token) {
         try{
             let decode = jwt.verify(token, "play2") as TokenInterface

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Router } from "express";
-import { redis } from "../server";
+// import { redis } from "../server";
 import { AppDataSource } from "../AppDataSource";
 import { ForexEntity } from "../entities/forex.entity";
 
@@ -9,38 +9,31 @@ const router = Router()
 
 router.get("/forex", async (req, res) => {
 
-    const forexCache = await redis.get("forex")
+    let forexDb = await AppDataSource.createQueryBuilder(ForexEntity, 'forex').execute()
 
-    if (forexCache) {
-        res.status(200).send(JSON.parse(forexCache))
-    } else {
+    res.status(200).send(forexDb)
 
-        let forexDb = await AppDataSource.createQueryBuilder(ForexEntity, 'forex').execute()
-
-        redis.set('forex', JSON.stringify(forexDb))
-
-        res.status(200).send(forexDb)
-
-    }
 })
 
 router.get("/updateForex", async (req, res) => {
 
-    let data: object[] = await AppDataSource.createQueryBuilder().select().from(ForexEntity, 'forex').execute()
 
-    if (data && data.length > 0) {
-        try {
-            let forexNews = await axios.get("https://nfs.faireconomy.media/ff_calendar_thisweek.json")
-            let cvt_forex = JSON.stringify(forexNews.data)
+    try {
+        let forexNews = await axios.get("https://nfs.faireconomy.media/ff_calendar_thisweek.json")
+        let cvt_forex = JSON.stringify(forexNews.data)
+        let data: object[] = await AppDataSource.createQueryBuilder().select().from(ForexEntity, 'forex').execute()
+
+        if (data && data.length > 0) {
             await AppDataSource.createQueryBuilder().update(ForexEntity).set({ news: cvt_forex }).where({ id: 1 }).execute()
-            redis.del("forex")
             res.status(200).send({ updateForexNews: true })
-        } catch (err) {
-            console.log(err)
-            console.log("Wait 5 minutes for fetch new data")
+        } else {
+            await AppDataSource.createQueryBuilder().insert().into(ForexEntity).values({ news: cvt_forex }).execute()
+            res.status(200).send({ InsertedForexNews: true })
         }
-    } else {
-        res.status(200).send("Explicit data none first row")
+    } catch (err) {
+        console.log(err)
+        console.log("Wait 5 minutes for fetch new data")
+        res.status(200).send({ updateForexNews: false })
     }
 })
 

@@ -11,7 +11,8 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import { AppDataSource } from './AppDataSource'
 import { UserEntity } from './entities/user.entity'
-import ioredis from 'ioredis'
+// import ioredis from 'ioredis'
+
 
 const formatMemoryUsage = (data: any) => `${Math.round(data / 1024 / 1024 * 100) / 100} MB`;
 
@@ -26,22 +27,22 @@ const memoryUsage = {
 
 console.log(memoryUsage);
 
-export const redis = new ioredis({
-    host: state == 'dev' ? 'localhost' : 'redis',
-    port: 6379
-})
+// export const redis = new ioredis({
+//     host: state == 'dev' ? 'localhost' : 'redis',
+//     port: 6379
+// })
 
-redis.set('key', 'Hello Redis', (err, reply) => {
-    if (err) throw err
+// redis.set('key', 'Hello Redis', (err, reply) => {
+//     if (err) throw err
 
-    console.log(reply)
+//     console.log(reply)
 
-    redis.get('key', (err, value) => {
-        if (err) throw err
+//     redis.get('key', (err, value) => {
+//         if (err) throw err
 
-        console.log("Get : ", value)
-    })
-})
+//         console.log("Get : ", value)
+//     })
+// })
 
 const app = express()
 app.use(express.json())

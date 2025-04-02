@@ -128,8 +128,8 @@ route.patch("/confirm_slip", TokenMiddleware, async (req: Request, res: Response
             let result_days = user[0].total_days + product[0].days
 
             await AppDataSource.createQueryBuilder().update(OrderEntity).set({ status: 1 }).where({ id: order_id }).execute()
-            
-            await AppDataSource.createQueryBuilder().update(UserEntity).set({ total_days: result_days }).where({ id: order[0].user_id }).execute()
+
+            await AppDataSource.createQueryBuilder().update(UserEntity).set({ role: 1, total_days: result_days }).where({ id: order[0].user_id }).execute()
 
             res.status(200).send("Confirmed Slip")
 
