@@ -6,6 +6,7 @@ import ProductRoute from './routes/product.route'
 import OrderRoute from './routes/order.route'
 import MailRoute from './routes/mail.route'
 import ForexRouter from './routes/forex.route'
+import TeamRouter from './routes/team.route'
 import crypto from 'crypto'
 import axios from 'axios'
 import dayjs from 'dayjs'
@@ -139,7 +140,7 @@ app.post('/api/meetings/users', async (req, res) => {
 
 
 app.use('/slip', express.static('uploads'))
-app.use('/api', UserRoute, ProductRoute, OrderRoute, MailRoute, ForexRouter)
+app.use('/api', UserRoute, ProductRoute, OrderRoute, MailRoute, ForexRouter, TeamRouter)
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`server is running on port ${PORT}`)

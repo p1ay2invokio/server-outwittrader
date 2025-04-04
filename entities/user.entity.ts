@@ -61,4 +61,7 @@ export class UserEntity {
 
     @Column({ name: 'thai_id_img' })
     thai_id_img: string
+
+    @Column({name: 'team_id'})
+    team_id: number
 }

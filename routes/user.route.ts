@@ -110,7 +110,18 @@ route.patch("/update_partner", TokenMiddleware, upload.fields([{ name: 'face_img
 
     const id = req?.id
 
+    console.log(files)
+
     try {
+
+        let inserted = await AppDataSource.createQueryBuilder().insert().into(TeamsEntity).values(
+            {
+                team_name: team_name,
+                owner_id: id,
+                status: 1 //waiting
+            }
+        ).execute()
+
         await AppDataSource.createQueryBuilder().update(UserEntity).set(
             {
                 name: name,
@@ -123,19 +134,14 @@ route.patch("/update_partner", TokenMiddleware, upload.fields([{ name: 'face_img
                 salary: salary,
                 bank_account: bank_account,
                 bank_name: bank_name,
-                face_img: files.face_img[0].path,
-                bank_img: files.bank_img[0].path,
-                thai_id_img: files.thai_id_img[0].path
+                face_img: `/slip/rp${id}/${files.face_img[0].filename}`,
+                bank_img: `/slip/rp${id}/${files.bank_img[0].filename}`,
+                thai_id_img: `/slip/rp${id}/${files.thai_id_img[0].filename}`,
+                team_id: inserted.raw[0].id
             }
         ).where({ id: id }).execute()
 
-        await AppDataSource.createQueryBuilder().insert().into(TeamsEntity).values(
-            {
-                team_name: team_name,
-                owner_id: id,
-                status: 1 //waiting
-            }
-        ).execute()
+
 
         res.status(200).send({ updated: true })
 
