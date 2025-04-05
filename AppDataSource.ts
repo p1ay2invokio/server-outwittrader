@@ -6,11 +6,11 @@ export const AppDataSource = new DataSource({
     // host: state == 'dev' ? 'localhost' : 'db',
     host: state == 'dev' ? 'localhost' : 'localhost',
     database: 'outwittrader',
-    // port: 5432,
-    port: 5433,
+    port: 5432,
+    // port: 5433,
     // username: state == 'dev' ? 'postgres' : 'play2',
     username: state == 'dev' ? 'postgres' : 'postgres',
-    password: '123456',
+    password: '21947',
     synchronize: false,
     entities: ['./entities/*.entity.ts']
 })
