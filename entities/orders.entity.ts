@@ -19,4 +19,7 @@ export class OrderEntity {
 
     @Column({ name: 'status' })
     status: number
+
+    @Column({name: 'referral_id'})
+    referral_id: number
 }

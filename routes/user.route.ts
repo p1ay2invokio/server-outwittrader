@@ -58,7 +58,7 @@ route.post("/login", async (req: Request, res: Response) => {
 })
 
 route.post("/register", async (req: Request, res: Response) => {
-    let { username, password, email, phone_number, ref } = req.body
+    let { username, password, email, phone_number } = req.body
 
     console.log(username, password, email, phone_number)
 
@@ -68,13 +68,63 @@ route.post("/register", async (req: Request, res: Response) => {
         if (user && user.length > 0) {
             res.status(409).send({ already_username: true })
         } else {
-            const inserted = await AppDataSource.createQueryBuilder().insert().into(UserEntity).values({ username: username, password: password, email: email, phone_number: phone_number, }).execute()
+            console.log("INSERTING....")
+            const inserted = await AppDataSource.createQueryBuilder().insert().into(UserEntity).values({ username: username, password: password, email: email, phone_number: phone_number }).execute()
             console.log(inserted)
 
             const token = await jwt.sign({ id: inserted.raw[0].id, username: username }, 'play2')
 
             if (inserted.raw) {
                 res.status(200).send({ register_success: true, token: token })
+            }
+        }
+    } else {
+        res.status(400).send("username and password is required")
+    }
+})
+
+route.post("/register_ref", async (req: Request, res: Response) => {
+    let { username, password, email, phone_number, referral } = req.body
+
+
+    console.log("Check Ref : ", referral)
+
+    if (username && password) {
+        const user: [] = await AppDataSource.createQueryBuilder().select().from(UserEntity, 'user').where("user.username = :username", { username: username }).execute()
+
+
+        if (user && user.length > 0) {
+            res.status(409).send({ already_username: true })
+        } else {
+            console.log("INSERTING....")
+            const inserted = await AppDataSource.createQueryBuilder().insert().into(UserEntity).values({ username: username, password: password, email: email, phone_number: phone_number, referral_id: referral }).execute()
+            console.log(inserted)
+
+            const token = await jwt.sign({ id: inserted.raw[0].id, username: username }, 'play2')
+
+            if (inserted.raw) {
+
+                const owner_ref: UserEntity[] = await AppDataSource.createQueryBuilder().select().from(UserEntity, "user").where({ id: referral }).execute()
+
+
+
+                // console.log(owner_ref[0].)
+
+                if (owner_ref && owner_ref.length > 0) {
+
+                    const team_target: TeamsEntity[] = await AppDataSource.createQueryBuilder().select().from(TeamsEntity, 'team').where({ id: owner_ref[0].team_id }).execute()
+
+                    if (team_target && team_target.length > 0) {
+
+                        console.log(team_target)
+
+                        const updated_member = team_target[0].members + 1
+
+                        const updated_members = await AppDataSource.createQueryBuilder().update(TeamsEntity).set({ members: updated_member }).where({id: team_target[0].id}).execute()
+
+                        res.status(200).send({ register_success: true, token: token })       
+                    }
+                }
             }
         }
     } else {

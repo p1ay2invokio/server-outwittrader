@@ -7,8 +7,9 @@ import { ProductEntity } from '../entities/products.entity'
 import multer from 'multer'
 import fs from 'fs'
 import path from 'path'
-import { WEBHOOK_DISCORD } from '../config'
+import { DISCORD_ACTIVE, WEBHOOK_DISCORD } from '../config'
 import axios from 'axios'
+import { TeamsEntity } from '../entities/teams.entity'
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -92,17 +93,25 @@ route.post("/purchase", TokenMiddleware, upload.single('slip'), async (req: Toke
 
         let total_amount = user[0].total_days + product[0].days
 
+        // Update Referral If User HAS REFERRAL ID
+        // let percent_owner = product[0].price *  80
+
+
         // console.log(total_amount)
 
-        const inserted = await AppDataSource.createQueryBuilder().insert().into(OrderEntity).values({ user_id: user_id, product_id: product_id, timestamp: String(timestamp), slip: slip?.filename }).execute()
+        const inserted = await AppDataSource.createQueryBuilder().insert().into(OrderEntity).values({ user_id: user_id, product_id: product_id, timestamp: String(timestamp), slip: slip?.filename, referral_id: user[0].referral_id }).execute()
 
         if (inserted.raw) {
 
-            axios.post(WEBHOOK_DISCORD, {
-                content: `\`\`\`🟢 ${user[0].username} สั่งซื้อสินค้าแพ็คเก็จ ${product[0].name} ${product[0].price} บาท ${day}\`\`\``
-            }).then(() => {
+            if(DISCORD_ACTIVE){
+                axios.post(WEBHOOK_DISCORD, {
+                    content: `\`\`\`🟢 ${user[0].username} สั่งซื้อสินค้าแพ็คเก็จ ${product[0].name} ${product[0].price} บาท ${day}\`\`\``
+                }).then(() => {
+                    res.status(200).send({ purchased: true })
+                })   
+            }else{
                 res.status(200).send({ purchased: true })
-            })
+            }
         } else {
             res.status(400).send("Invalid request payload")
         }
@@ -130,6 +139,28 @@ route.patch("/confirm_slip", TokenMiddleware, async (req: Request, res: Response
             await AppDataSource.createQueryBuilder().update(OrderEntity).set({ status: 1 }).where({ id: order_id }).execute()
 
             await AppDataSource.createQueryBuilder().update(UserEntity).set({ role: 1, total_days: result_days }).where({ id: order[0].user_id }).execute()
+
+
+            if (user[0].referral_id) {
+                console.log("referral id check : ", user[0].referral_id)
+                let percent_member_baht = (product[0].price * 20) / 100
+                console.log("percent : ", percent_member_baht)
+    
+                const ownerTeams:TeamsEntity[] = await AppDataSource.createQueryBuilder().select().from(TeamsEntity, "teams").where({ owner_id: user[0].referral_id }).execute()
+    
+                console.log("owner_team : ", ownerTeams)
+
+                if(ownerTeams && ownerTeams.length > 0){
+                    
+                    const update_money_teams = ownerTeams[0].total_money + percent_member_baht
+
+                    console.log("NEXT MONEY : ", update_money_teams)
+    
+                    let updated_team_referral = await AppDataSource.createQueryBuilder().update(TeamsEntity).set({ total_money: update_money_teams}).where({owner_id: user[0].referral_id}).execute()
+    
+                    // res.status(200).send({updated_team_success: true})
+                }
+            }
 
             res.status(200).send("Confirmed Slip")
 

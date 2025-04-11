@@ -64,4 +64,7 @@ export class UserEntity {
 
     @Column({name: 'team_id'})
     team_id: number
+
+    @Column({name: "referral_id"})
+    referral_id: number
 }

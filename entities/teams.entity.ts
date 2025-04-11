@@ -16,4 +16,13 @@ export class TeamsEntity {
 
     @Column({ name: 'broker_link' })
     broker_link: string
+    
+    @Column({name: 'members'})
+    members: number
+
+    @Column({name: 'total_money'})
+    total_money: number
+
+    @Column({name: 'broker_money'})
+    broker_money: number
 }

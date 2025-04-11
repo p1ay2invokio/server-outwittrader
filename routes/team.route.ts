@@ -26,20 +26,48 @@ route.get("/team", TokenMiddleware, async (req: CustomRequest, res: Response) =>
     res.status(200).send(data)
 })
 
-route.get("/all_register_partner", async (req: Request, res: Response) => {
+route.get("/user_team", TokenMiddleware, async (req: Request, res: Response) => {
+    //@ts-ignore
+    const id = req.id
 
-    const data = await AppDataSource.createQueryBuilder().select().from(TeamsEntity, 'team').innerJoin(UserEntity, 'users', "team.owner_id = users.id").where({ status: 1 }).execute()
+    const data = await AppDataSource.createQueryBuilder().select().from(UserEntity, "users").innerJoin(TeamsEntity, 'teams', "users.team_id = teams.id").where({ id: id }).execute()
 
     res.status(200).send(data)
 })
 
-route.patch("/verify_team_partner", async(req: Request, res: Response)=>{
-    
-    const {team_id ,broker_link} = req.body
+route.get("/all_register_partner", async (req: Request, res: Response) => {
 
-    const data = await AppDataSource.createQueryBuilder().update(TeamsEntity).set({status: 2, broker_link: broker_link}).where({id: team_id}).execute()
+    const data = await AppDataSource.createQueryBuilder().select().from(TeamsEntity, 'team').innerJoin(UserEntity, 'users', "team.owner_id = users.id").where({ status: 1 }).execute()
 
-    res.status(200).send({verified: true})
+    console.log(data)
+
+    res.status(200).send(data)
+})
+
+route.patch("/verify_team_partner", async (req: Request, res: Response) => {
+
+    const { team_id, broker_link } = req.body
+
+    const data = await AppDataSource.createQueryBuilder().update(TeamsEntity).set({ status: 2, broker_link: broker_link }).where({ id: team_id }).execute()
+
+    res.status(200).send({ verified: true })
+})
+
+route.post("/broker_money", async (req: Request, res: Response) => {
+    const { amount, user_id } = req.body
+
+    const user_data: UserEntity[] = await AppDataSource.createQueryBuilder().select().from(UserEntity, "users").where({ id: user_id }).execute()
+
+    if (user_data && user_data.length > 0) {
+        const team_data: TeamsEntity[] = await AppDataSource.createQueryBuilder().select().from(TeamsEntity, "teams").where({ id: user_data[0].team_id }).execute()
+
+        if (team_data && team_data.length > 0) {
+            let update_broker_money = team_data[0].broker_money + Number(amount)
+            const data = await AppDataSource.createQueryBuilder().update(TeamsEntity).set({ broker_money: update_broker_money }).where({ id: user_data[0].team_id }).execute()
+
+            res.status(200).send({updated_broker_money: true})
+        }
+    }
 })
 
 export default route
