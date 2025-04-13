@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: play2
-      POSTGRES_PASSWORD: 123456
+      POSTGRES_PASSWORD: 21947
       POSTGRES_DB: outwittrader
     ports:
       - 5432:5432
@@ -14,42 +14,42 @@ services:
       - ./init-db:/docker-entrypoint-initdb.d # This init-db will run once until it has been deleted
     networks:
       - two-network
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: play2@domain.com
-      PGADMIN_DEFAULT_PASSWORD: 123456
-      PGADMIN_LISTEN_PORT: 89
-    ports:
-      - 89:89
-    depends_on:
-      - db
-    networks:
-      - two-network
-  # app:
-  #   container_name: app
-  #   build: .
+  # pgadmin:
+  #   container_name: pgadmin
+  #   image: dpage/pgadmin4
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: play2@domain.com
+  #     PGADMIN_DEFAULT_PASSWORD: 123456
+  #     PGADMIN_LISTEN_PORT: 89
   #   ports:
-  #     - 3001:3001
+  #     - 89:89
   #   depends_on:
   #     - db
   #   networks:
   #     - two-network
-  # web:
-  #   image: nginx
-  #   container_name: web
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #     - ./cert/api/cert.pem:/etc/nginx/cert.pem
-  #     - ./cert/api/privkey.pem:/etc/nginx/privkey.pem
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   networks:
-  #     - two-network
-  #   depends_on:
-  #     - app
+  app:
+    container_name: app
+    build: .
+    ports:
+      - 3001:3001
+    depends_on:
+      - db
+    networks:
+      - two-network
+  web:
+    image: nginx
+    container_name: web
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./cert/api/cert.pem:/etc/nginx/cert.pem
+      - ./cert/api/privkey.pem:/etc/nginx/privkey.pem
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - two-network
+    depends_on:
+      - app
   # redis:
   #   image: redis:latest
   #   container_name: redis
