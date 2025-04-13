@@ -103,13 +103,13 @@ route.post("/purchase", TokenMiddleware, upload.single('slip'), async (req: Toke
 
         if (inserted.raw) {
 
-            if(DISCORD_ACTIVE){
+            if (DISCORD_ACTIVE) {
                 axios.post(WEBHOOK_DISCORD, {
                     content: `\`\`\`🟢 ${user[0].username} สั่งซื้อสินค้าแพ็คเก็จ ${product[0].name} ${product[0].price} บาท ${day}\`\`\``
                 }).then(() => {
                     res.status(200).send({ purchased: true })
-                })   
-            }else{
+                })
+            } else {
                 res.status(200).send({ purchased: true })
             }
         } else {
@@ -145,19 +145,19 @@ route.patch("/confirm_slip", TokenMiddleware, async (req: Request, res: Response
                 console.log("referral id check : ", user[0].referral_id)
                 let percent_member_baht = (product[0].price * 20) / 100
                 console.log("percent : ", percent_member_baht)
-    
-                const ownerTeams:TeamsEntity[] = await AppDataSource.createQueryBuilder().select().from(TeamsEntity, "teams").where({ owner_id: user[0].referral_id }).execute()
-    
+
+                const ownerTeams: TeamsEntity[] = await AppDataSource.createQueryBuilder().select().from(TeamsEntity, "teams").where({ owner_id: user[0].referral_id }).execute()
+
                 console.log("owner_team : ", ownerTeams)
 
-                if(ownerTeams && ownerTeams.length > 0){
-                    
+                if (ownerTeams && ownerTeams.length > 0) {
+
                     const update_money_teams = ownerTeams[0].total_money + percent_member_baht
 
                     console.log("NEXT MONEY : ", update_money_teams)
-    
-                    let updated_team_referral = await AppDataSource.createQueryBuilder().update(TeamsEntity).set({ total_money: update_money_teams}).where({owner_id: user[0].referral_id}).execute()
-    
+
+                    let updated_team_referral = await AppDataSource.createQueryBuilder().update(TeamsEntity).set({ total_money: update_money_teams }).where({ owner_id: user[0].referral_id }).execute()
+
                     // res.status(200).send({updated_team_success: true})
                 }
             }
@@ -196,6 +196,17 @@ route.get("/delete_all_slip", async (req: Request, res: Response) => {
     // console.log(length)
 
     res.status(200).send("All Files has been deleted!")
+})
+
+route.get("/order_partner_buy", TokenMiddleware, async (req: TokenInterface, res: Response) => {
+
+    const id = req.id
+
+    const order_partner = await AppDataSource.createQueryBuilder().select().from(OrderEntity, "order").innerJoin(ProductEntity, "product", "order.product_id = product.id").where({ referral_id: id }).execute()
+    
+    console.log(order_partner)
+
+    res.status(200).send(order_partner)
 })
 
 export default route
