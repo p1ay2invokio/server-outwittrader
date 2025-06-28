@@ -7,6 +7,7 @@ import fs from 'fs'
 
 import multer from 'multer'
 import { TeamsEntity } from "../entities/teams.entity";
+import { OrderEntity } from "../entities/orders.entity";
 
 const storage = multer.diskStorage({
     destination: (req: any, file, cb) => {
@@ -120,9 +121,9 @@ route.post("/register_ref", async (req: Request, res: Response) => {
 
                         const updated_member = team_target[0].members + 1
 
-                        const updated_members = await AppDataSource.createQueryBuilder().update(TeamsEntity).set({ members: updated_member }).where({id: team_target[0].id}).execute()
+                        const updated_members = await AppDataSource.createQueryBuilder().update(TeamsEntity).set({ members: updated_member }).where({ id: team_target[0].id }).execute()
 
-                        res.status(200).send({ register_success: true, token: token })       
+                        res.status(200).send({ register_success: true, token: token })
                     }
                 }
             }
@@ -233,6 +234,28 @@ route.patch("/update_days", async (req: Request, res: Response) => {
     await AppDataSource.createQueryBuilder().update(UserEntity).set({ total_days: days }).where({ id: user_id }).execute()
 
     res.status(200).send({ success: true })
+})
+
+route.patch("/update_all", async (req: Request, res: Response) => {
+
+    const { days } = req.body
+
+    await AppDataSource.createQueryBuilder().update(UserEntity).set({ total_days: () => `total_days+${days}` }).where("total_days > 0").execute()
+
+    // await AppDataSource.createQueryBuilder().select().from(UserEntity, "users").where().execute()
+
+    res.status(200).send({ success: true })
+})
+
+
+route.get("/dashboard", async (req: Request, res: Response) => {
+    const users = await AppDataSource.createQueryBuilder().from(UserEntity, "users").getCount()
+    const team_verified = await AppDataSource.createQueryBuilder().from(TeamsEntity, 'teams').where("status = 2").getCount()
+    const team_waiting = await AppDataSource.createQueryBuilder().from(TeamsEntity, 'teams').where("status = 1").getCount()
+    const ordered = await AppDataSource.createQueryBuilder().from(OrderEntity, "orders").where("status = 1").getCount()
+    // console.log(users)
+
+    res.status(200).json({ users_count: users, team_verified: team_verified, team_waiting: team_waiting, order_count: ordered })
 })
 
 export default route

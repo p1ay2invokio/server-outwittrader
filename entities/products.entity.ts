@@ -16,4 +16,7 @@ export class ProductEntity{
 
     @Column({name: 'days'})
     days: number
+
+    @Column({name: 'type'})
+    type: string
 }

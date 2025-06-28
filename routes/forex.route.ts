@@ -23,6 +23,8 @@ router.get("/updateForex", async (req, res) => {
         let cvt_forex = JSON.stringify(forexNews.data)
         let data: object[] = await AppDataSource.createQueryBuilder().select().from(ForexEntity, 'forex').execute()
 
+        // console.log(cvt_forex)
+
         if (data && data.length > 0) {
             await AppDataSource.createQueryBuilder().update(ForexEntity).set({ news: cvt_forex }).where({ id: 1 }).execute()
             res.status(200).send({ updateForexNews: true })

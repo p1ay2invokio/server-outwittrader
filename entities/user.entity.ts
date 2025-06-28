@@ -67,4 +67,10 @@ export class UserEntity {
 
     @Column({name: "referral_id"})
     referral_id: number
+
+    @Column({name: 'binary_days'})
+    binary_days: number
+
+    @Column({name: 'forex_days'})
+    forex_days: number
 }

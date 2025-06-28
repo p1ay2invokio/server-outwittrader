@@ -105,7 +105,7 @@ route.post("/purchase", TokenMiddleware, upload.single('slip'), async (req: Toke
 
             if (DISCORD_ACTIVE) {
                 axios.post(WEBHOOK_DISCORD, {
-                    content: `\`\`\`🟢 ${user[0].username} สั่งซื้อสินค้าแพ็คเก็จ ${product[0].name} ${product[0].price} บาท ${day}\`\`\``
+                    content: `\`\`\`🟢 ${user[0].username} สั่งซื้อสินค้าแพ็คเก็จ ${product[0].name} ${product[0].type == "B" ? 'Binary Option' : product[0].type == "F" ? "Forex" : "Binary & Forex"} ${product[0].price} บาท ${day}\`\`\``
                 }).then(() => {
                     res.status(200).send({ purchased: true })
                 })
@@ -133,13 +133,27 @@ route.patch("/confirm_slip", TokenMiddleware, async (req: Request, res: Response
         const product: ProductEntity[] = await AppDataSource.createQueryBuilder().select().from(ProductEntity, 'product').where({ id: order[0].product_id }).execute()
 
         if (user && user.length > 0 && product && product.length > 0) {
+            
 
-            let result_days = user[0].total_days + product[0].days
+            // let result_days = user[0].total_days + product[0].days
+            // let result_days
+
+            if(product[0].type == "B"){
+                let total_binary = user[0].binary_days + product[0].days
+
+                await AppDataSource.createQueryBuilder().update(UserEntity).set({ role: user[0].role == 0 ? 1 : user[0].role, binary_days: total_binary }).where({ id: order[0].user_id }).execute()
+            }else if(product[0].type == "F"){
+                let total_forex = user[0].forex_days + product[0].days
+
+                await AppDataSource.createQueryBuilder().update(UserEntity).set({ role: user[0].role == 0 ? 1 : user[0].role, forex_days: total_forex }).where({ id: order[0].user_id }).execute()
+            }else if(product[0].type == "BF"){
+                let total_binary = user[0].binary_days + product[0].days
+                let total_forex = user[0].forex_days + product[0].days
+
+                await AppDataSource.createQueryBuilder().update(UserEntity).set({ role: user[0].role == 0 ? 1 : user[0].role, binary_days: total_binary, forex_days: total_forex }).where({ id: order[0].user_id }).execute()
+            }
 
             await AppDataSource.createQueryBuilder().update(OrderEntity).set({ status: 1 }).where({ id: order_id }).execute()
-
-            await AppDataSource.createQueryBuilder().update(UserEntity).set({ role: 1, total_days: result_days }).where({ id: order[0].user_id }).execute()
-
 
             if (user[0].referral_id) {
                 console.log("referral id check : ", user[0].referral_id)
@@ -198,15 +212,12 @@ route.get("/delete_all_slip", async (req: Request, res: Response) => {
     res.status(200).send("All Files has been deleted!")
 })
 
-route.get("/order_partner_buy", TokenMiddleware, async (req: TokenInterface, res: Response) => {
+route.get("/order_partner_buy", TokenMiddleware , async (req: TokenInterface, res: Response)=>{
+    const id:any = req.id
 
-    const id = req.id
+    const data = await AppDataSource.createQueryBuilder().select().from(OrderEntity, 'order').where({referral_id: id}).execute()
 
-    const order_partner = await AppDataSource.createQueryBuilder().select().from(OrderEntity, "order").innerJoin(ProductEntity, "product", "order.product_id = product.id").where({ referral_id: id }).execute()
-    
-    console.log(order_partner)
-
-    res.status(200).send(order_partner)
+    res.status(200).send(data)
 })
 
 export default route

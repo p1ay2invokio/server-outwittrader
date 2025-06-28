@@ -1,8 +1,8 @@
 FROM node:21
 
-WORKDIR /usr/src/app
+WORKDIR /
 
-COPY package.json ./
+COPY package.json .
 
 RUN npm install
 
