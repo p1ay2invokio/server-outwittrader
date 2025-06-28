@@ -8,10 +8,10 @@ services:
       POSTGRES_PASSWORD: 21947
       POSTGRES_DB: outwittrader
     ports:
-      - 5432:5432
-    volumes:
-      - db-data:/var/lib/postgresql/data
-      - ./init-db:/docker-entrypoint-initdb.d # This init-db will run once until it has been deleted
+      - 5445:5432
+    # volumes:
+    #   - db-data:/var/lib/postgresql/data
+    #   - ./init-db:/docker-entrypoint-initdb.d # This init-db will run once until it has been deleted
     networks:
       - dev_network
   # pgadmin:
@@ -59,8 +59,8 @@ services:
   #   networks:
   #     - two-network
 
-volumes:
-  db-data:
+# volumes:
+#   db-data:
 
 
 networks:
