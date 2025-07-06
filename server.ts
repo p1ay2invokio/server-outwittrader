@@ -88,8 +88,8 @@ app.get('/api/row', async (req, res) => {
     res.status(200).send({ status: true })
 });
 
-const BBB_URL = 'https://livestream.outwittrader.com/bigbluebutton';
-const BBB_SECRET = 'gWaTMghSRfH5ejCCOg0NFDCp7SKVqq9Sz2e0GXcGsw'
+const BBB_URL = 'https://oslive.outwittrader.com/bigbluebutton';
+const BBB_SECRET = 'ZcmBa8T1rq0AruaPJFnEaL28dZERWM0AYxgVGRbH'
 
 function generateChecksum(apiCall: string, query: string) {
     return crypto.createHash('sha1').update(apiCall + query + BBB_SECRET).digest('hex');
