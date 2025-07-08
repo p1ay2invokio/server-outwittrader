@@ -19,7 +19,7 @@ services:
       - STREAM_SECRET=ZcmBa8T1rq0AruaPJFnEaL28dZERWM0AYxgVGRbH
       - DISCORD_WEBHOOK=https://discord.com/api/webhooks/1345655145404305541/tBd0s8WZyx_DeDwuxzLClvGesMr3AnaShFuh8ErX8A38LQhBv1AxQZi9N9PWkmuIPbQO
     ports:
-      - 3005:3001
+      - 3011:3001
     depends_on:
       - outwit_db
     networks:
