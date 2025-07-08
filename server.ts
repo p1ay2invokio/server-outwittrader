@@ -12,7 +12,10 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import { AppDataSource } from './AppDataSource'
 import { UserEntity } from './entities/user.entity'
+import dotenv from 'dotenv'
 // import ioredis from 'ioredis'
+
+dotenv.config()
 
 
 const formatMemoryUsage = (data: any) => `${Math.round(data / 1024 / 1024 * 100) / 100} MB`;
