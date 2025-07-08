@@ -206,11 +206,11 @@ route.patch("/update_partner", TokenMiddleware, upload.fields([{ name: 'face_img
 route.patch("/reset_password", async (req: Request, res: Response) => {
     const { email, new_password } = req.body
 
-    console.log(email, new_password)
+    // console.log(email, new_password)
 
     const user: [] = await AppDataSource.createQueryBuilder().select().from(UserEntity, 'user').where({ email: email }).execute()
 
-    console.log(user)
+    // console.log(user)
 
     if (user && user.length > 0) {
         const updated = await AppDataSource.createQueryBuilder().update(UserEntity).set({ password: new_password }).where({ email: email }).execute()
@@ -229,23 +229,60 @@ route.get("/user/:id", async (req: Request, res: Response) => {
 
 route.patch("/update_days", async (req: Request, res: Response) => {
 
-    const { days, user_id } = req.body
+    const { days, user_id, kind } = req.body
 
-    await AppDataSource.createQueryBuilder().update(UserEntity).set({ total_days: days }).where({ id: user_id }).execute()
+    // console.log(kind)
+
+    // console.log(days)
+
+    // console.log(user_id)
+
+    // console.log(kind)
+
+    const user:UserEntity[] = await AppDataSource.createQueryBuilder().select().from(UserEntity, 'user').where({id: Number(user_id)}).execute()
+
+    // console.log(user)
+
+
+    await AppDataSource.createQueryBuilder().update(UserEntity).set(kind == 'binary' ? { binary_days: user[0].binary_days + days } : kind == 'forex' ? { forex_days: user[0].forex_days + days } : { total_days: days }).where({ id: user_id }).execute()
 
     res.status(200).send({ success: true })
 })
 
-route.patch("/update_all", async (req: Request, res: Response) => {
+route.patch("/update_days_all_users", async (req: Request, res: Response) => {
+    const { days, kind } = req.body
 
-    const { days } = req.body
 
-    await AppDataSource.createQueryBuilder().update(UserEntity).set({ total_days: () => `total_days+${days}` }).where("total_days > 0").execute()
+    const users = await AppDataSource.createQueryBuilder().select().from(UserEntity, 'user').execute()
 
-    // await AppDataSource.createQueryBuilder().select().from(UserEntity, "users").where().execute()
+    // console.log("KIND : ", kind, days)
 
-    res.status(200).send({ success: true })
+
+    await users.map(async (item: UserEntity) => {
+
+        let test = await AppDataSource.createQueryBuilder().update(UserEntity).set(kind == 'binary' ? { binary_days: item.binary_days + days } : kind == 'forex' ? { forex_days: item.forex_days + days } : { total_days: 0 }).where({ id: item.id }).execute()
+
+        // console.log(test)
+    })
+
+    // console.log(users)
+
+    res.status(200).send(users)
+
+    // await AppDataSource.createQueryBuilder().update(UserEntity).set()
+
 })
+
+// route.patch("/update_all", async (req: Request, res: Response) => {
+
+//     const { days } = req.body
+
+//     await AppDataSource.createQueryBuilder().update(UserEntity).set({ total_days: () => `total_days+${days}` }).where("total_days > 0").execute()
+
+//     // await AppDataSource.createQueryBuilder().select().from(UserEntity, "users").where().execute()
+
+//     res.status(200).send({ success: true })
+// })
 
 
 route.get("/dashboard", async (req: Request, res: Response) => {

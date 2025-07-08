@@ -46,7 +46,8 @@ route.get("/orders", TokenMiddleware, async (req: TokenInterface, res: Response)
     ]).from(OrderEntity, 'o')
         .innerJoin(UserEntity, 'u', 'u.id = o.user_id')
         .innerJoin(ProductEntity, 'p', 'p.id = o.product_id')
-        .where({ user_id: user_id }).execute()
+        .where({ user_id: user_id })
+        .orderBy({ id: 'DESC'}).execute()
 
     // console.log(orders)
 
@@ -68,6 +69,7 @@ route.get("/all_orders", TokenMiddleware, async (req: TokenInterface, res: Respo
     ]).from(OrderEntity, 'o')
         .innerJoin(UserEntity, 'u', 'u.id = o.user_id')
         .innerJoin(ProductEntity, 'p', 'p.id = o.product_id')
+        .orderBy("id", 'DESC')
         .where({ status: 0 }).execute()
 
     // console.log(orders)

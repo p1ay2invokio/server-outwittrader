@@ -56,8 +56,14 @@ const updateTotalDays = async () => {
 
     await AppDataSource.createQueryBuilder()
         .update(UserEntity)
-        .set({ total_days: () => "total_days - 1" })
-        .where("total_days > 0")
+        .set({ binary_days: () => "binary_days - 1" })
+        .where("binary_days > 0")
+        .execute();
+
+    await AppDataSource.createQueryBuilder()
+        .update(UserEntity)
+        .set({ forex_days: () => "forex_days - 1" })
+        .where("forex_days > 0")
         .execute();
 
     scheduleMidnightTask();
@@ -88,8 +94,8 @@ app.get('/api/row', async (req, res) => {
     res.status(200).send({ status: true })
 });
 
-const BBB_URL = 'https://oslive.outwittrader.com/bigbluebutton';
-const BBB_SECRET = 'ZcmBa8T1rq0AruaPJFnEaL28dZERWM0AYxgVGRbH'
+const BBB_URL = process.env.STREAM_URL;
+const BBB_SECRET = process.env.STREAM_SECRET
 
 function generateChecksum(apiCall: string, query: string) {
     return crypto.createHash('sha1').update(apiCall + query + BBB_SECRET).digest('hex');
